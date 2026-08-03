@@ -75,7 +75,7 @@ function MechanicalChar({
     if (ch === " ") return "\u00A0"
     if (ch === "*") {
       return (
-        <span className="inline-block transform translate-y-[0.1em] font-sans font-bold opacity-80">
+        <span className="inline-block transform translate-y-[0.12em] font-sans font-bold opacity-85">
           *
         </span>
       )
@@ -91,12 +91,17 @@ function MechanicalChar({
     )
   }
 
-  const widthClass = isSeparator ? "min-w-[0.3em] px-[0.5px]" : "min-w-[0.62em] px-[0.5px]"
+  const isAsterisk = currentChar === "*"
+  const widthClass = isAsterisk
+    ? "min-w-[0.38em] px-[0.5px]"
+    : isSeparator
+    ? "min-w-[0.3em] px-[0.5px]"
+    : "min-w-[0.62em] px-[0.5px]"
 
   return (
     <span
       key={animKey}
-      className={`relative inline-flex items-center justify-center overflow-hidden h-[1.3em] ${widthClass} align-middle select-none`}
+      className={`relative inline-flex items-center justify-center overflow-hidden h-[1.3em] ${widthClass} align-middle select-none transition-[min-width] duration-150 ease-out`}
       style={{ perspective: "300px" }}
     >
       {isFlipping && prevChar && prevChar !== currentChar ? (
