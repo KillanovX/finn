@@ -44,39 +44,75 @@ Instruções:
 - Seja clara, amigável e concisa (máximo 2 a 3 parágrafos curtos).
 - Use os dados financeiros reais acima para responder dúvidas sobre saldo, gastos, orçamentos e dicas de economia.`
 
-    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "nvidia/llama-3.1-nemotron-70b-instruct",
+    // Lista de modelos suportados para fallback em caso de erro 404
+    const candidateModels = [
+      "nvidia/nemotron-3-super-120b-a12b",
+      "nvidia/llama-3.1-nemotron-70b-instruct",
+      "meta/llama-3.1-70b-instruct",
+    ]
+
+    let response: Response | null = null
+    let selectedModelUsed = ""
+    let lastErrorDetails = ""
+
+    for (const modelName of candidateModels) {
+      console.log(`Tentando requisição para o modelo NVIDIA: ${modelName}`)
+      
+      const payload: Record<string, any> = {
+        model: modelName,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message },
         ],
-        temperature: 0.6,
+        temperature: 1,
         top_p: 0.95,
-        max_tokens: 1024,
-      }),
-    })
+        max_tokens: 4096,
+      }
 
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error("NVIDIA API error:", response.status, errText)
+      // Parâmetros especiais para o nemotron-3-super-120b-a12b
+      if (modelName === "nvidia/nemotron-3-super-120b-a12b") {
+        payload.chat_template_kwargs = { enable_thinking: true }
+        payload.reasoning_budget = 4096
+      }
+
+      try {
+        const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify(payload),
+        })
+
+        if (res.ok) {
+          response = res
+          selectedModelUsed = modelName
+          break
+        } else {
+          lastErrorDetails = `[${res.status}] ${await res.text()}`
+          console.warn(`Modelo ${modelName} falhou: ${lastErrorDetails}`)
+        }
+      } catch (err: any) {
+        console.error(`Erro ao chamar ${modelName}:`, err)
+      }
+    }
+
+    if (!response || !response.ok) {
       return NextResponse.json(
-        { error: `Erro na API NVIDIA (${response.status})` },
-        { status: response.status }
+        { error: `Erro na API NVIDIA. Detalhes: ${lastErrorDetails}` },
+        { status: 500 }
       )
     }
 
     const data = await response.json()
-    const reply =
-      data.choices?.[0]?.message?.content ||
-      "Desculpe, não consegui obter a resposta do modelo."
+    const choice = data.choices?.[0]?.message
+    const content = choice?.content || ""
+    const reasoning = choice?.reasoning_content || ""
 
-    return NextResponse.json({ reply })
+    const reply = content || reasoning || "Não foi possível obter resposta do modelo."
+
+    return NextResponse.json({ reply, model: selectedModelUsed })
   } catch (err: any) {
     console.error("Chat API route exception:", err)
     return NextResponse.json({ error: "Erro interno no servidor" }, { status: 500 })
