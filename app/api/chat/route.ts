@@ -10,7 +10,7 @@ import {
 
 export async function POST(req: Request) {
   try {
-    const { message, model } = await req.json()
+    const { message } = await req.json()
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Mensagem inválida" }, { status: 400 })
@@ -44,26 +44,15 @@ Instruções:
 - Seja clara, amigável e concisa (máximo 2 a 3 parágrafos curtos).
 - Use os dados financeiros reais acima para responder dúvidas sobre saldo, gastos, orçamentos e dicas de economia.`
 
-    const targetModel = model || "nvidia/llama-3.1-nemotron-nano-vl-8b-v1"
+    const modelName = "nvidia/nemotron-3-super-120b-a12b"
 
-    const candidateModels = Array.from(
-      new Set([
-        targetModel,
-        "nvidia/llama-3.1-nemotron-nano-vl-8b-v1",
-        "nvidia/nemotron-3-super-120b-a12b",
-        "nvidia/llama-3.1-nemotron-70b-instruct",
-        "meta/llama-3.1-70b-instruct",
-      ])
-    )
-
-    let response: Response | null = null
-    let selectedModelUsed = ""
-    let lastErrorDetails = ""
-
-    for (const modelName of candidateModels) {
-      console.log(`Tentando requisição para o modelo NVIDIA: ${modelName}`)
-
-      const payload: Record<string, any> = {
+    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
         model: modelName,
         messages: [
           { role: "system", content: systemPrompt },
@@ -72,40 +61,17 @@ Instruções:
         temperature: 0.7,
         top_p: 0.95,
         max_tokens: 4096,
-      }
+        chat_template_kwargs: { enable_thinking: true },
+        reasoning_budget: 4096,
+      }),
+    })
 
-      if (modelName === "nvidia/nemotron-3-super-120b-a12b") {
-        payload.chat_template_kwargs = { enable_thinking: true }
-        payload.reasoning_budget = 4096
-      }
-
-      try {
-        const res = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify(payload),
-        })
-
-        if (res.ok) {
-          response = res
-          selectedModelUsed = modelName
-          break
-        } else {
-          lastErrorDetails = `[${res.status}] ${await res.text()}`
-          console.warn(`Modelo ${modelName} falhou: ${lastErrorDetails}`)
-        }
-      } catch (err: any) {
-        console.error(`Erro ao chamar ${modelName}:`, err)
-      }
-    }
-
-    if (!response || !response.ok) {
+    if (!response.ok) {
+      const errText = await response.text()
+      console.error("NVIDIA API error:", response.status, errText)
       return NextResponse.json(
-        { error: `Erro na API NVIDIA. Detalhes: ${lastErrorDetails}` },
-        { status: 500 }
+        { error: `Erro na API NVIDIA (${response.status})` },
+        { status: response.status }
       )
     }
 
@@ -116,7 +82,7 @@ Instruções:
 
     const reply = content || reasoning || "Não foi possível obter resposta do modelo."
 
-    return NextResponse.json({ reply, model: selectedModelUsed })
+    return NextResponse.json({ reply, model: modelName })
   } catch (err: any) {
     console.error("Chat API route exception:", err)
     return NextResponse.json({ error: "Erro interno no servidor" }, { status: 500 })
