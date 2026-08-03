@@ -10,7 +10,7 @@ import {
 
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json()
+    const { message, model } = await req.json()
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Mensagem inválida" }, { status: 400 })
@@ -44,12 +44,17 @@ Instruções:
 - Seja clara, amigável e concisa (máximo 2 a 3 parágrafos curtos).
 - Use os dados financeiros reais acima para responder dúvidas sobre saldo, gastos, orçamentos e dicas de economia.`
 
-    // Lista de modelos suportados para fallback em caso de erro 404
-    const candidateModels = [
-      "nvidia/nemotron-3-super-120b-a12b",
-      "nvidia/llama-3.1-nemotron-70b-instruct",
-      "meta/llama-3.1-70b-instruct",
-    ]
+    const targetModel = model || "nvidia/llama-3.1-nemotron-nano-vl-8b-v1"
+
+    const candidateModels = Array.from(
+      new Set([
+        targetModel,
+        "nvidia/llama-3.1-nemotron-nano-vl-8b-v1",
+        "nvidia/nemotron-3-super-120b-a12b",
+        "nvidia/llama-3.1-nemotron-70b-instruct",
+        "meta/llama-3.1-70b-instruct",
+      ])
+    )
 
     let response: Response | null = null
     let selectedModelUsed = ""
@@ -57,19 +62,18 @@ Instruções:
 
     for (const modelName of candidateModels) {
       console.log(`Tentando requisição para o modelo NVIDIA: ${modelName}`)
-      
+
       const payload: Record<string, any> = {
         model: modelName,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message },
         ],
-        temperature: 1,
+        temperature: 0.7,
         top_p: 0.95,
         max_tokens: 4096,
       }
 
-      // Parâmetros especiais para o nemotron-3-super-120b-a12b
       if (modelName === "nvidia/nemotron-3-super-120b-a12b") {
         payload.chat_template_kwargs = { enable_thinking: true }
         payload.reasoning_budget = 4096
