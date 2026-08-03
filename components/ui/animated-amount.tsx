@@ -40,8 +40,7 @@ function MechanicalChar({
       return
     }
 
-    // Stagger delay per character index (35ms per step)
-    const delay = index * 35
+    const delay = index * 32
 
     const timer = setTimeout(() => {
       setPrevChar((old) => {
@@ -56,54 +55,54 @@ function MechanicalChar({
     return () => clearTimeout(timer)
   }, [isVisible, targetChar, index, isNumber])
 
-  const isAsterisk = currentChar === "*"
+  const renderCharContent = (ch: string) => {
+    if (ch === " ") return "\u00A0"
+    if (ch === "*") {
+      return (
+        <span className="inline-block transform translate-y-[0.2em]">
+          *
+        </span>
+      )
+    }
+    return ch
+  }
 
   if (!isNumber || prevChar === null || prevChar === currentChar) {
     return (
-      <span
-        className={`inline-block select-none ${
-          isAsterisk ? "font-sans font-semibold opacity-80" : ""
-        }`}
-      >
-        {currentChar === " " ? "\u00A0" : currentChar}
+      <span className="inline-block select-none leading-none">
+        {renderCharContent(currentChar)}
       </span>
     )
   }
 
-  const prevIsAsterisk = prevChar === "*"
-
   return (
     <span
       key={animKey}
-      className="relative inline-block overflow-hidden h-[1.2em] min-w-[0.55em] align-baseline select-none"
+      className="relative inline-block overflow-hidden h-[1em] min-w-[0.55em] leading-none align-baseline select-none"
       style={{ perspective: "300px" }}
     >
       {/* Outgoing card: rotates down out from center to bottom */}
       <span
-        className={`absolute inset-0 flex items-center justify-center ${
-          prevIsAsterisk ? "font-sans font-semibold opacity-80" : ""
-        }`}
+        className="absolute inset-0 flex items-center justify-center leading-none"
         style={{
-          animation: "mechRotateOut 230ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+          animation: "mechRotateOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
           transformOrigin: "50% 50%",
           backfaceVisibility: "hidden",
         }}
       >
-        {prevChar === " " ? "\u00A0" : prevChar}
+        {renderCharContent(prevChar)}
       </span>
 
       {/* Incoming card: rotates down in from top to center */}
       <span
-        className={`absolute inset-0 flex items-center justify-center ${
-          isAsterisk ? "font-sans font-semibold opacity-80" : ""
-        }`}
+        className="absolute inset-0 flex items-center justify-center leading-none"
         style={{
-          animation: "mechRotateIn 230ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+          animation: "mechRotateIn 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
           transformOrigin: "50% 50%",
           backfaceVisibility: "hidden",
         }}
       >
-        {currentChar === " " ? "\u00A0" : currentChar}
+        {renderCharContent(currentChar)}
       </span>
     </span>
   )
@@ -114,7 +113,7 @@ export function AnimatedAmount({ value, isVisible, className = "" }: AnimatedAmo
   const hiddenChars = visibleChars.map((ch) => (/[0-9.,]/.test(ch) ? "*" : ch))
 
   return (
-    <span className={`inline-flex items-baseline ${className}`}>
+    <span className={`inline-flex items-baseline leading-none ${className}`}>
       <style>{`
         @keyframes mechRotateIn {
           0% {
