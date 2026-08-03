@@ -9,53 +9,73 @@ interface AnimatedAmountProps {
 }
 
 export function AnimatedAmount({ value, isVisible, className = "" }: AnimatedAmountProps) {
-  const visibleChars = value.split("")
-  const hiddenChars = visibleChars.map((ch) => (/[0-9.,]/.test(ch) ? "*" : ch))
-  const total = visibleChars.length
+  const getTargetChars = (visible: boolean, valStr: string) => {
+    const chars = valStr.split("")
+    return visible
+      ? chars
+      : chars.map((ch) => (/[0-9.,]/.test(ch) ? "*" : ch))
+  }
 
-  const [stepIndex, setStepIndex] = useState<number>(total)
+  const [currentChars, setCurrentChars] = useState<string[]>(() =>
+    getTargetChars(isVisible, value)
+  )
+
   const isFirstRender = useRef(true)
 
   useEffect(() => {
-    if (isFirstRender.current) {
+    const targetChars = getTargetChars(isVisible, value)
+
+    if (isFirstRender.current || currentChars.length !== targetChars.length) {
       isFirstRender.current = false
-      setStepIndex(total)
+      setCurrentChars(targetChars)
       return
     }
 
-    const intervalMs = Math.max(18, Math.min(40, Math.floor(300 / Math.max(total, 1))))
-    let current = 0
-    setStepIndex(0)
+    const indicesToChange: number[] = []
+    for (let i = 0; i < targetChars.length; i++) {
+      if (currentChars[i] !== targetChars[i]) {
+        indicesToChange.push(i)
+      }
+    }
 
+    if (indicesToChange.length === 0) return
+
+    const duration = 220
+    const interval = Math.max(16, Math.floor(duration / indicesToChange.length))
+
+    let step = 0
     const timer = setInterval(() => {
-      current += 1
-      setStepIndex(current)
-      if (current >= total) {
+      if (step < indicesToChange.length) {
+        const idxToUpdate = indicesToChange[step]
+        setCurrentChars((prev) => {
+          if (prev.length !== targetChars.length) return targetChars
+          const next = [...prev]
+          next[idxToUpdate] = targetChars[idxToUpdate]
+          return next
+        })
+        step++
+      } else {
         clearInterval(timer)
       }
-    }, intervalMs)
+    }, interval)
 
     return () => clearInterval(timer)
-  }, [isVisible, value, total])
+  }, [isVisible, value])
 
   return (
     <span className={`inline-flex items-baseline ${className}`}>
-      {visibleChars.map((vChar, idx) => {
-        const hChar = hiddenChars[idx]
-        const isRevealed = isVisible ? idx < stepIndex : idx >= stepIndex
-        const displayChar = isRevealed ? vChar : hChar
-        const isAsterisk = displayChar === "*"
-
+      {currentChars.map((ch, idx) => {
+        const isAsterisk = ch === "*"
         return (
           <span
             key={idx}
-            className={`inline-block transition-all duration-150 ease-out select-none ${
+            className={`inline-block transition-all duration-200 ease-out select-none ${
               isAsterisk
-                ? "font-sans font-semibold opacity-85 text-current transform scale-105"
-                : "opacity-100 transform scale-100"
+                ? "font-sans font-semibold opacity-75 scale-90"
+                : "opacity-100 scale-100"
             }`}
           >
-            {displayChar === " " ? "\u00A0" : displayChar}
+            {ch === " " ? "\u00A0" : ch}
           </span>
         )
       })}
