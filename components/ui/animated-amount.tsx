@@ -24,32 +24,47 @@ function MechanicalChar({
 
   const [currentChar, setCurrentChar] = useState(targetChar)
   const [prevChar, setPrevChar] = useState<string | null>(null)
+  const [isFlipping, setIsFlipping] = useState(false)
   const [animKey, setAnimKey] = useState(0)
 
-  const isFirst = useRef(true)
+  const activeCharRef = useRef(targetChar)
+  const isFirstRender = useRef(true)
 
   useEffect(() => {
-    if (isFirst.current) {
-      isFirst.current = false
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      activeCharRef.current = targetChar
+      setCurrentChar(targetChar)
       return
     }
 
     if (!isNumber) {
+      activeCharRef.current = targetChar
       setCurrentChar(targetChar)
       setPrevChar(null)
+      setIsFlipping(false)
       return
     }
+
+    if (targetChar === activeCharRef.current) return
+
+    const prev = activeCharRef.current
+    activeCharRef.current = targetChar
 
     const delay = index * 32
 
     const timer = setTimeout(() => {
-      setPrevChar((old) => {
-        const source = old ?? currentChar
-        if (source === targetChar) return null
-        return source
-      })
+      setPrevChar(prev)
       setCurrentChar(targetChar)
+      setIsFlipping(true)
       setAnimKey((k) => k + 1)
+
+      const endTimer = setTimeout(() => {
+        setIsFlipping(false)
+        setPrevChar(null)
+      }, 220)
+
+      return () => clearTimeout(endTimer)
     }, delay)
 
     return () => clearTimeout(timer)
@@ -59,7 +74,7 @@ function MechanicalChar({
     if (ch === " ") return "\u00A0"
     if (ch === "*") {
       return (
-        <span className="inline-block transform translate-y-[0.2em]">
+        <span className="inline-block transform translate-y-[0.15em] font-sans font-bold opacity-80">
           *
         </span>
       )
@@ -67,9 +82,9 @@ function MechanicalChar({
     return ch
   }
 
-  if (!isNumber || prevChar === null || prevChar === currentChar) {
+  if (!isNumber) {
     return (
-      <span className="inline-block select-none leading-none">
+      <span className="relative inline-flex items-center justify-center h-[1.1em] align-middle select-none">
         {renderCharContent(currentChar)}
       </span>
     )
@@ -78,32 +93,40 @@ function MechanicalChar({
   return (
     <span
       key={animKey}
-      className="relative inline-block overflow-hidden h-[1em] min-w-[0.55em] leading-none align-baseline select-none"
+      className="relative inline-flex items-center justify-center overflow-hidden h-[1.1em] min-w-[0.58em] align-middle select-none"
       style={{ perspective: "300px" }}
     >
-      {/* Outgoing card: rotates down out from center to bottom */}
-      <span
-        className="absolute inset-0 flex items-center justify-center leading-none"
-        style={{
-          animation: "mechRotateOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
-          transformOrigin: "50% 50%",
-          backfaceVisibility: "hidden",
-        }}
-      >
-        {renderCharContent(prevChar)}
-      </span>
+      {isFlipping && prevChar && prevChar !== currentChar ? (
+        <>
+          {/* Outgoing card: rotates down out from center to bottom */}
+          <span
+            className="absolute inset-0 flex items-center justify-center leading-none"
+            style={{
+              animation: "mechRotateOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+              transformOrigin: "50% 50%",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            {renderCharContent(prevChar)}
+          </span>
 
-      {/* Incoming card: rotates down in from top to center */}
-      <span
-        className="absolute inset-0 flex items-center justify-center leading-none"
-        style={{
-          animation: "mechRotateIn 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
-          transformOrigin: "50% 50%",
-          backfaceVisibility: "hidden",
-        }}
-      >
-        {renderCharContent(currentChar)}
-      </span>
+          {/* Incoming card: rotates down in from top to center */}
+          <span
+            className="absolute inset-0 flex items-center justify-center leading-none"
+            style={{
+              animation: "mechRotateIn 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+              transformOrigin: "50% 50%",
+              backfaceVisibility: "hidden",
+            }}
+          >
+            {renderCharContent(currentChar)}
+          </span>
+        </>
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center leading-none">
+          {renderCharContent(currentChar)}
+        </span>
+      )}
     </span>
   )
 }
@@ -113,7 +136,7 @@ export function AnimatedAmount({ value, isVisible, className = "" }: AnimatedAmo
   const hiddenChars = visibleChars.map((ch) => (/[0-9.,]/.test(ch) ? "*" : ch))
 
   return (
-    <span className={`inline-flex items-baseline leading-none ${className}`}>
+    <span className={`inline-flex items-center align-middle leading-none ${className}`}>
       <style>{`
         @keyframes mechRotateIn {
           0% {
