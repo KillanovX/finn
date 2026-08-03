@@ -11,12 +11,15 @@ type BalanceContextType = {
 const BalanceContext = createContext<BalanceContextType | undefined>(undefined)
 
 export function BalanceProvider({ children }: { children: React.ReactNode }) {
-  const [isBalanceVisible, setIsBalanceVisible] = useState(true)
+  // Valores ocultos por padrão ao abrir o app
+  const [isBalanceVisible, setIsBalanceVisible] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("cofre_show_balance")
     if (saved !== null) {
       setIsBalanceVisible(saved === "true")
+    } else {
+      setIsBalanceVisible(false)
     }
   }, [])
 
