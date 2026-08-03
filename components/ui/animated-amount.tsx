@@ -98,6 +98,15 @@ function MechanicalChar({
     ? "min-w-[0.3em] px-[0.5px]"
     : "min-w-[0.62em] px-[0.5px]"
 
+  const isRevealing = isVisible
+  const outAnimation = isRevealing
+    ? "mechRotateOutToTop 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards"
+    : "mechRotateOutToBottom 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards"
+
+  const inAnimation = isRevealing
+    ? "mechRotateInFromBottom 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards"
+    : "mechRotateInFromTop 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards"
+
   return (
     <span
       key={animKey}
@@ -110,7 +119,7 @@ function MechanicalChar({
           <span
             className="absolute inset-0 flex items-center justify-center leading-none"
             style={{
-              animation: "mechRotateOut 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+              animation: outAnimation,
               transformOrigin: "50% 50%",
               backfaceVisibility: "hidden",
             }}
@@ -122,7 +131,7 @@ function MechanicalChar({
           <span
             className="absolute inset-0 flex items-center justify-center leading-none"
             style={{
-              animation: "mechRotateIn 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+              animation: inAnimation,
               transformOrigin: "50% 50%",
               backfaceVisibility: "hidden",
             }}
@@ -146,7 +155,7 @@ export function AnimatedAmount({ value, isVisible, className = "" }: AnimatedAmo
   return (
     <span className={`inline-flex items-center align-middle leading-none ${className}`}>
       <style>{`
-        @keyframes mechRotateIn {
+        @keyframes mechRotateInFromTop {
           0% {
             transform: perspective(250px) rotateX(-90deg) translateY(-70%);
             opacity: 0;
@@ -156,13 +165,33 @@ export function AnimatedAmount({ value, isVisible, className = "" }: AnimatedAmo
             opacity: 1;
           }
         }
-        @keyframes mechRotateOut {
+        @keyframes mechRotateOutToBottom {
           0% {
             transform: perspective(250px) rotateX(0deg) translateY(0%);
             opacity: 1;
           }
           100% {
             transform: perspective(250px) rotateX(90deg) translateY(70%);
+            opacity: 0;
+          }
+        }
+        @keyframes mechRotateInFromBottom {
+          0% {
+            transform: perspective(250px) rotateX(90deg) translateY(70%);
+            opacity: 0;
+          }
+          100% {
+            transform: perspective(250px) rotateX(0deg) translateY(0%);
+            opacity: 1;
+          }
+        }
+        @keyframes mechRotateOutToTop {
+          0% {
+            transform: perspective(250px) rotateX(0deg) translateY(0%);
+            opacity: 1;
+          }
+          100% {
+            transform: perspective(250px) rotateX(-90deg) translateY(-70%);
             opacity: 0;
           }
         }
