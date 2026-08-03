@@ -52,7 +52,6 @@ function MechanicalChar({
     const prev = activeCharRef.current
     activeCharRef.current = targetChar
 
-    // Faster stagger delay (20ms per character index)
     const delay = index * 20
 
     const timer = setTimeout(() => {
@@ -76,7 +75,7 @@ function MechanicalChar({
     if (ch === " ") return "\u00A0"
     if (ch === "*") {
       return (
-        <span className="inline-block transform translate-y-[0.15em] font-sans font-bold opacity-80">
+        <span className="inline-block transform translate-y-[0.1em] font-sans font-bold opacity-80">
           *
         </span>
       )
@@ -86,18 +85,18 @@ function MechanicalChar({
 
   if (!isNumber) {
     return (
-      <span className="relative inline-flex items-center justify-center h-[1.1em] align-middle select-none">
+      <span className="relative inline-flex items-center justify-center h-[1.3em] align-middle select-none px-[1px]">
         {renderCharContent(currentChar)}
       </span>
     )
   }
 
-  const widthClass = isSeparator ? "min-w-[0.22em]" : "min-w-[0.55em]"
+  const widthClass = isSeparator ? "min-w-[0.3em] px-[0.5px]" : "min-w-[0.62em] px-[0.5px]"
 
   return (
     <span
       key={animKey}
-      className={`relative inline-flex items-center justify-center overflow-hidden h-[1.1em] ${widthClass} align-middle select-none`}
+      className={`relative inline-flex items-center justify-center overflow-hidden h-[1.3em] ${widthClass} align-middle select-none`}
       style={{ perspective: "300px" }}
     >
       {isFlipping && prevChar && prevChar !== currentChar ? (
