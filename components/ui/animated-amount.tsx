@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef, useCallback } from "react"
 
 interface AnimatedAmountProps {
   value: string
@@ -8,201 +8,196 @@ interface AnimatedAmountProps {
   className?: string
 }
 
-function MechanicalChar({
-  vChar,
-  hChar,
-  isVisible,
+/**
+ * A single character cell that performs a split-flap / mechanical clock animation.
+ *
+ * Key design decisions:
+ * - Uses a fixed `width: 1ch` for every character slot (digit, separator, asterisk)
+ *   so that the total width of the string never changes during animation → zero layout shift.
+ * - The animation is CSS-only (`@keyframes`) with direction chosen based on
+ *   whether we are hiding (top→bottom) or revealing (bottom→top).
+ * - A staggered `setTimeout` per character index produces the sequential wave.
+ */
+function FlipCell({
+  char: targetChar,
   index,
+  direction,
+  isMasked,
 }: {
-  vChar: string
-  hChar: string
-  isVisible: boolean
+  char: string
   index: number
+  direction: "hide" | "reveal" | null
+  isMasked: boolean
 }) {
-  const isNumber = /[0-9.,]/.test(vChar)
-  const isSeparator = /[.,]/.test(vChar)
-  const targetChar = isVisible ? vChar : hChar
-
-  const [currentChar, setCurrentChar] = useState(targetChar)
-  const [prevChar, setPrevChar] = useState<string | null>(null)
-  const [isFlipping, setIsFlipping] = useState(false)
-  const [animKey, setAnimKey] = useState(0)
-
-  const activeCharRef = useRef(targetChar)
-  const isFirstRender = useRef(true)
+  const [displayChar, setDisplayChar] = useState(targetChar)
+  const [flipFrom, setFlipFrom] = useState<string | null>(null)
+  const [flipKey, setFlipKey] = useState(0)
+  const activeRef = useRef(targetChar)
+  const firstRender = useRef(true)
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      activeCharRef.current = targetChar
-      setCurrentChar(targetChar)
+    if (firstRender.current) {
+      firstRender.current = false
+      activeRef.current = targetChar
+      setDisplayChar(targetChar)
       return
     }
 
-    if (!isNumber) {
-      activeCharRef.current = targetChar
-      setCurrentChar(targetChar)
-      setPrevChar(null)
-      setIsFlipping(false)
+    if (targetChar === activeRef.current) return
+    const prev = activeRef.current
+    activeRef.current = targetChar
+
+    // Only animate numeric characters (digits + separators + asterisk)
+    const isAnimatable = /[0-9.,*]/.test(targetChar) || /[0-9.,*]/.test(prev)
+    if (!isAnimatable) {
+      setDisplayChar(targetChar)
+      setFlipFrom(null)
       return
     }
 
-    if (targetChar === activeCharRef.current) return
-
-    const prev = activeCharRef.current
-    activeCharRef.current = targetChar
-
-    const delay = index * 20
-
+    const delay = index * 25
     const timer = setTimeout(() => {
-      setPrevChar(prev)
-      setCurrentChar(targetChar)
-      setIsFlipping(true)
-      setAnimKey((k) => k + 1)
+      setFlipFrom(prev)
+      setDisplayChar(targetChar)
+      setFlipKey((k) => k + 1)
 
-      const endTimer = setTimeout(() => {
-        setIsFlipping(false)
-        setPrevChar(null)
-      }, 150)
-
-      return () => clearTimeout(endTimer)
+      const cleanup = setTimeout(() => setFlipFrom(null), 180)
+      return () => clearTimeout(cleanup)
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [isVisible, targetChar, index, isNumber])
+  }, [targetChar, index])
 
-  const renderCharContent = (ch: string) => {
+  const isFlipping = flipFrom !== null && flipFrom !== displayChar
+
+  // Pick animation direction
+  const outAnim = direction === "reveal"
+    ? "flipOutUp 160ms cubic-bezier(.4,0,.15,1) forwards"
+    : "flipOutDown 160ms cubic-bezier(.4,0,.15,1) forwards"
+  const inAnim = direction === "reveal"
+    ? "flipInUp 160ms cubic-bezier(.4,0,.15,1) forwards"
+    : "flipInDown 160ms cubic-bezier(.4,0,.15,1) forwards"
+
+  const renderChar = (ch: string) => {
     if (ch === " ") return "\u00A0"
-    if (ch === "*") {
-      return (
-        <span className="inline-block transform translate-y-[0.12em] font-sans font-bold opacity-85">
-          *
-        </span>
-      )
-    }
     return ch
   }
 
-  if (!isNumber) {
-    return (
-      <span className="relative inline-flex items-center justify-center h-[1.3em] align-middle select-none px-[1px]">
-        {renderCharContent(currentChar)}
-      </span>
-    )
-  }
-
-  const isAsterisk = currentChar === "*"
-  const widthClass = isAsterisk
-    ? "min-w-[0.38em] px-[0.5px]"
-    : isSeparator
-    ? "min-w-[0.3em] px-[0.5px]"
-    : "min-w-[0.62em] px-[0.5px]"
-
-  const isRevealing = isVisible
-  const outAnimation = isRevealing
-    ? "mechRotateOutToTop 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards"
-    : "mechRotateOutToBottom 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards"
-
-  const inAnimation = isRevealing
-    ? "mechRotateInFromBottom 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards"
-    : "mechRotateInFromTop 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards"
-
   return (
     <span
-      key={animKey}
-      className={`relative inline-flex items-center justify-center overflow-hidden h-[1.3em] ${widthClass} align-middle select-none transition-[min-width] duration-150 ease-out`}
-      style={{ perspective: "300px" }}
+      className="relative inline-flex items-center justify-center overflow-hidden select-none text-center"
+      style={{
+        width: "0.62em",
+        height: "1.25em",
+        verticalAlign: "baseline",
+      }}
     >
-      {isFlipping && prevChar && prevChar !== currentChar ? (
-        <>
-          {/* Outgoing card */}
+      {isFlipping ? (
+        <React.Fragment key={flipKey}>
+          {/* Outgoing */}
           <span
-            className="absolute inset-0 flex items-center justify-center leading-none"
+            className="absolute inset-0 flex items-center justify-center"
             style={{
-              animation: outAnimation,
-              transformOrigin: "50% 50%",
+              animation: outAnim,
               backfaceVisibility: "hidden",
+              willChange: "transform, opacity",
             }}
           >
-            {renderCharContent(prevChar)}
+            {renderChar(flipFrom!)}
           </span>
-
-          {/* Incoming card */}
+          {/* Incoming */}
           <span
-            className="absolute inset-0 flex items-center justify-center leading-none"
+            className="absolute inset-0 flex items-center justify-center"
             style={{
-              animation: inAnimation,
-              transformOrigin: "50% 50%",
+              animation: inAnim,
               backfaceVisibility: "hidden",
+              willChange: "transform, opacity",
             }}
           >
-            {renderCharContent(currentChar)}
+            {renderChar(displayChar)}
           </span>
-        </>
+        </React.Fragment>
       ) : (
-        <span className="absolute inset-0 flex items-center justify-center leading-none">
-          {renderCharContent(currentChar)}
+        <span className="flex items-center justify-center w-full h-full">
+          {renderChar(displayChar)}
         </span>
       )}
     </span>
   )
 }
 
+/* ──────────────────────────────────────── */
+
 export function AnimatedAmount({ value, isVisible, className = "" }: AnimatedAmountProps) {
-  const visibleChars = value.split("")
-  const hiddenChars = visibleChars.map((ch) => (/[0-9.,]/.test(ch) ? "*" : ch))
+  const prevVisibleRef = useRef(isVisible)
+  const [direction, setDirection] = useState<"hide" | "reveal" | null>(null)
+
+  useEffect(() => {
+    if (isVisible !== prevVisibleRef.current) {
+      setDirection(isVisible ? "reveal" : "hide")
+      prevVisibleRef.current = isVisible
+    }
+  }, [isVisible])
+
+  const chars = value.split("")
+  const maskedChars = chars.map((ch) => (/[0-9]/.test(ch) ? "*" : ch))
+
+  const displayChars = isVisible ? chars : maskedChars
 
   return (
-    <span className={`inline-flex items-center align-middle leading-none ${className}`}>
+    <span
+      className={`inline-flex items-baseline ${className}`}
+      style={{ lineHeight: 1 }}
+    >
       <style>{`
-        @keyframes mechRotateInFromTop {
-          0% {
-            transform: perspective(250px) rotateX(-90deg) translateY(-70%);
-            opacity: 0;
-          }
-          100% {
-            transform: perspective(250px) rotateX(0deg) translateY(0%);
+        @keyframes flipOutDown {
+          from {
+            transform: translateY(0) rotateX(0);
             opacity: 1;
           }
-        }
-        @keyframes mechRotateOutToBottom {
-          0% {
-            transform: perspective(250px) rotateX(0deg) translateY(0%);
-            opacity: 1;
-          }
-          100% {
-            transform: perspective(250px) rotateX(90deg) translateY(70%);
+          to {
+            transform: translateY(60%) rotateX(70deg);
             opacity: 0;
           }
         }
-        @keyframes mechRotateInFromBottom {
-          0% {
-            transform: perspective(250px) rotateX(90deg) translateY(70%);
+        @keyframes flipInDown {
+          from {
+            transform: translateY(-60%) rotateX(-70deg);
             opacity: 0;
           }
-          100% {
-            transform: perspective(250px) rotateX(0deg) translateY(0%);
+          to {
+            transform: translateY(0) rotateX(0);
             opacity: 1;
           }
         }
-        @keyframes mechRotateOutToTop {
-          0% {
-            transform: perspective(250px) rotateX(0deg) translateY(0%);
+        @keyframes flipOutUp {
+          from {
+            transform: translateY(0) rotateX(0);
             opacity: 1;
           }
-          100% {
-            transform: perspective(250px) rotateX(-90deg) translateY(-70%);
+          to {
+            transform: translateY(-60%) rotateX(-70deg);
             opacity: 0;
+          }
+        }
+        @keyframes flipInUp {
+          from {
+            transform: translateY(60%) rotateX(70deg);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0) rotateX(0);
+            opacity: 1;
           }
         }
       `}</style>
-      {visibleChars.map((vChar, idx) => (
-        <MechanicalChar
+      {displayChars.map((ch, idx) => (
+        <FlipCell
           key={idx}
-          vChar={vChar}
-          hChar={hiddenChars[idx]}
-          isVisible={isVisible}
+          char={ch}
           index={idx}
+          direction={direction}
+          isMasked={!isVisible}
         />
       ))}
     </span>
