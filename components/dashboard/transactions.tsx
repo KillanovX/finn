@@ -60,7 +60,7 @@ export function Transactions() {
                   {t.category} · {t.date}
                 </p>
               </div>
-              <span className={`text-sm font-semibold ${income ? "text-foreground" : "text-muted-foreground"}`}>
+              <span className={`h-[20px] flex items-center text-sm font-semibold ${income ? "text-foreground" : "text-muted-foreground"}`}>
                 <AnimatedAmount value={valStr} isVisible={isBalanceVisible} />
               </span>
             </li>

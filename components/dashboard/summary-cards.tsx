@@ -28,9 +28,9 @@ export function SummaryCards() {
             )}
           </button>
         </div>
-        <p className="mt-4 text-3xl font-semibold tracking-tight">
+        <div className="mt-4 h-[36px] flex items-center text-3xl font-semibold tracking-tight">
           <AnimatedAmount value={formatCurrency(totalBalance)} isVisible={isBalanceVisible} />
-        </p>
+        </div>
         <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-primary-foreground/10 px-2 py-1 text-xs">
           <TrendingUp className="size-3.5" aria-hidden="true" />
           +2,4% este mês
@@ -45,9 +45,9 @@ export function SummaryCards() {
             <ArrowUpRight className="size-4" aria-hidden="true" />
           </div>
         </div>
-        <p className="mt-4 text-3xl font-semibold tracking-tight">
+        <div className="mt-4 h-[36px] flex items-center text-3xl font-semibold tracking-tight">
           <AnimatedAmount value={formatCurrency(monthlyIncome)} isVisible={isBalanceVisible} />
-        </p>
+        </div>
         <p className="mt-3 text-xs text-accent-foreground/70">Entradas confirmadas</p>
       </div>
 
@@ -59,9 +59,9 @@ export function SummaryCards() {
             <ArrowDownRight className="size-4" aria-hidden="true" />
           </div>
         </div>
-        <p className="mt-4 text-3xl font-semibold tracking-tight">
+        <div className="mt-4 h-[36px] flex items-center text-3xl font-semibold tracking-tight">
           <AnimatedAmount value={formatCurrency(monthlyExpenses)} isVisible={isBalanceVisible} />
-        </p>
+        </div>
         <p className="mt-3 text-xs text-muted-foreground">63% da sua renda</p>
       </div>
 
@@ -73,9 +73,9 @@ export function SummaryCards() {
             <Wallet className="size-4" aria-hidden="true" />
           </div>
         </div>
-        <p className="mt-4 text-3xl font-semibold tracking-tight">
+        <div className="mt-4 h-[36px] flex items-center text-3xl font-semibold tracking-tight">
           {Math.round(savingsRate * 100)}%
-        </p>
+        </div>
         <p className="mt-3 text-xs text-muted-foreground">Meta: 40%</p>
       </div>
     </div>

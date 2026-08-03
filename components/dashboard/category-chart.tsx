@@ -39,7 +39,7 @@ export function CategoryChart() {
         </ChartContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-xs text-muted-foreground">Total</span>
-          <span className="text-xl font-semibold tracking-tight">
+          <span className="h-[28px] flex items-center text-xl font-semibold tracking-tight">
             <AnimatedAmount value={formatCurrency(total)} isVisible={isBalanceVisible} />
           </span>
         </div>
@@ -50,7 +50,7 @@ export function CategoryChart() {
           <li key={c.name} className="flex items-center gap-2 text-sm">
             <span className="size-2.5 rounded-full" style={{ background: c.color }} />
             <span className="text-muted-foreground">{c.name}</span>
-            <span className="ml-auto font-medium">
+            <span className="ml-auto h-[20px] flex items-center font-medium">
               <AnimatedAmount value={formatCurrency(c.value)} isVisible={isBalanceVisible} />
             </span>
             <span className="w-10 text-right text-xs text-muted-foreground">

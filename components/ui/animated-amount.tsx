@@ -79,7 +79,7 @@ function FlipCell({
         lineHeight: "1em",
       }}
     >
-      {/* Invisible spacer that always reserves height — never removed from flow */}
+      {/* Invisible spacer always in flow to lock height */}
       <span className="invisible" aria-hidden="true">0</span>
 
       {isFlipping ? (
@@ -126,7 +126,8 @@ export function AnimatedAmount({ value, isVisible, className = "" }: AnimatedAmo
   }, [isVisible])
 
   const chars = value.split("")
-  const maskedChars = chars.map((ch) => (/[0-9]/.test(ch) ? "*" : ch))
+  // Mask digits AND separators (. ,) with * when hidden
+  const maskedChars = chars.map((ch) => (/[0-9.,]/.test(ch) ? "*" : ch))
   const displayChars = isVisible ? chars : maskedChars
 
   return (

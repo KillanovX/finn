@@ -24,9 +24,9 @@ export function Budgets() {
             <li key={b.name}>
               <div className="mb-1.5 flex items-center justify-between text-sm">
                 <span className="font-medium">{b.name}</span>
-                <span className={over ? "text-destructive" : "text-muted-foreground"}>
+                <span className={`h-[20px] flex items-center ${over ? "text-destructive" : "text-muted-foreground"}`}>
                   <AnimatedAmount value={formatCurrency(b.spent)} isVisible={isBalanceVisible} />
-                  <span> / </span>
+                  <span className="mx-0.5">/</span>
                   <AnimatedAmount value={formatCurrency(b.limit)} isVisible={isBalanceVisible} />
                 </span>
               </div>
@@ -37,8 +37,8 @@ export function Budgets() {
                 />
               </div>
               {over && (
-                <p className="mt-1 text-xs text-destructive">
-                  Limite excedido em{" "}
+                <p className="mt-1 text-xs text-destructive flex items-center">
+                  <span>Limite excedido em&nbsp;</span>
                   <AnimatedAmount value={formatCurrency(b.spent - b.limit)} isVisible={isBalanceVisible} />
                 </p>
               )}
