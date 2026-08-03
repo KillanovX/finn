@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Car,
   Film,
@@ -8,7 +10,8 @@ import {
   Utensils,
   type LucideIcon,
 } from "lucide-react"
-import { currencyDetailed, transactions } from "@/lib/finance-data"
+import { useBalance } from "@/lib/balance-context"
+import { transactions } from "@/lib/finance-data"
 
 const iconByCategory: Record<string, LucideIcon> = {
   Alimentação: Utensils,
@@ -21,6 +24,8 @@ const iconByCategory: Record<string, LucideIcon> = {
 }
 
 export function Transactions() {
+  const { formatCurrency, isBalanceVisible } = useBalance()
+
   return (
     <div className="rounded-3xl bg-card p-5 text-card-foreground">
       <div className="mb-4 flex items-center justify-between">
@@ -53,8 +58,8 @@ export function Transactions() {
                 </p>
               </div>
               <span className={`text-sm font-semibold ${income ? "text-foreground" : "text-muted-foreground"}`}>
-                {income ? "+" : ""}
-                {currencyDetailed(t.amount)}
+                {isBalanceVisible ? (income ? "+" : "") : ""}
+                {formatCurrency(t.amount, true)}
               </span>
             </li>
           )

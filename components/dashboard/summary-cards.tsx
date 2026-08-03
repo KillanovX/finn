@@ -1,16 +1,33 @@
-import { ArrowDownRight, ArrowUpRight, Eye, TrendingUp, Wallet } from "lucide-react"
-import { currency, monthlyExpenses, monthlyIncome, savingsRate, totalBalance } from "@/lib/finance-data"
+"use client"
+
+import { ArrowDownRight, ArrowUpRight, Eye, EyeOff, TrendingUp, Wallet } from "lucide-react"
+import { useBalance } from "@/lib/balance-context"
+import { monthlyExpenses, monthlyIncome, savingsRate, totalBalance } from "@/lib/finance-data"
 
 export function SummaryCards() {
+  const { isBalanceVisible, toggleBalance, formatCurrency } = useBalance()
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {/* Saldo total — card destaque escuro */}
       <div className="relative overflow-hidden rounded-3xl bg-primary p-5 text-primary-foreground sm:col-span-2 lg:col-span-1">
         <div className="flex items-center justify-between">
           <span className="text-sm text-primary-foreground/70">Saldo total</span>
-          <Eye className="size-4 text-primary-foreground/70" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={toggleBalance}
+            className="flex size-7 items-center justify-center rounded-full text-primary-foreground/70 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+            aria-label={isBalanceVisible ? "Esconder saldo" : "Exibir saldo"}
+            title={isBalanceVisible ? "Esconder saldo" : "Exibir saldo"}
+          >
+            {isBalanceVisible ? (
+              <Eye className="size-4" aria-hidden="true" />
+            ) : (
+              <EyeOff className="size-4" aria-hidden="true" />
+            )}
+          </button>
         </div>
-        <p className="mt-4 text-3xl font-semibold tracking-tight">{currency(totalBalance)}</p>
+        <p className="mt-4 text-3xl font-semibold tracking-tight">{formatCurrency(totalBalance)}</p>
         <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-primary-foreground/10 px-2 py-1 text-xs">
           <TrendingUp className="size-3.5" aria-hidden="true" />
           +2,4% este mês
@@ -25,7 +42,7 @@ export function SummaryCards() {
             <ArrowUpRight className="size-4" aria-hidden="true" />
           </div>
         </div>
-        <p className="mt-4 text-3xl font-semibold tracking-tight">{currency(monthlyIncome)}</p>
+        <p className="mt-4 text-3xl font-semibold tracking-tight">{formatCurrency(monthlyIncome)}</p>
         <p className="mt-3 text-xs text-accent-foreground/70">Entradas confirmadas</p>
       </div>
 
@@ -37,7 +54,7 @@ export function SummaryCards() {
             <ArrowDownRight className="size-4" aria-hidden="true" />
           </div>
         </div>
-        <p className="mt-4 text-3xl font-semibold tracking-tight">{currency(monthlyExpenses)}</p>
+        <p className="mt-4 text-3xl font-semibold tracking-tight">{formatCurrency(monthlyExpenses)}</p>
         <p className="mt-3 text-xs text-muted-foreground">63% da sua renda</p>
       </div>
 

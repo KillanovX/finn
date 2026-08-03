@@ -7,6 +7,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { useBalance } from "@/lib/balance-context"
 import { cashflow } from "@/lib/finance-data"
 
 const chartConfig = {
@@ -15,6 +16,8 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function CashflowChart() {
+  const { formatCurrency } = useBalance()
+
   return (
     <div className="rounded-3xl bg-card p-5 text-card-foreground">
       <div className="mb-4 flex items-center justify-between">
@@ -39,7 +42,15 @@ export function CashflowChart() {
           <XAxis dataKey="month" tickLine={false} axisLine={false} dy={8} />
           <ChartTooltip
             cursor={{ fill: "var(--secondary)", radius: 8 }}
-            content={<ChartTooltipContent />}
+            content={
+              <ChartTooltipContent
+                formatter={(value) => (
+                  <span className="font-mono font-medium text-foreground tabular-nums">
+                    {formatCurrency(Number(value))}
+                  </span>
+                )}
+              />
+            }
           />
           <Bar dataKey="entradas" fill="var(--color-entradas)" radius={[6, 6, 0, 0]} maxBarSize={22} />
           <Bar dataKey="saidas" fill="var(--color-saidas)" radius={[6, 6, 0, 0]} maxBarSize={22} />

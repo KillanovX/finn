@@ -1,6 +1,11 @@
-import { budgets, currency } from "@/lib/finance-data"
+"use client"
+
+import { useBalance } from "@/lib/balance-context"
+import { budgets } from "@/lib/finance-data"
 
 export function Budgets() {
+  const { formatCurrency } = useBalance()
+
   return (
     <div className="rounded-3xl bg-card p-5 text-card-foreground">
       <div className="mb-4 flex items-center justify-between">
@@ -19,7 +24,7 @@ export function Budgets() {
               <div className="mb-1.5 flex items-center justify-between text-sm">
                 <span className="font-medium">{b.name}</span>
                 <span className={over ? "text-destructive" : "text-muted-foreground"}>
-                  {currency(b.spent)} / {currency(b.limit)}
+                  {formatCurrency(b.spent)} / {formatCurrency(b.limit)}
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
@@ -30,7 +35,7 @@ export function Budgets() {
               </div>
               {over && (
                 <p className="mt-1 text-xs text-destructive">
-                  Limite excedido em {currency(b.spent - b.limit)}
+                  Limite excedido em {formatCurrency(b.spent - b.limit)}
                 </p>
               )}
             </li>
