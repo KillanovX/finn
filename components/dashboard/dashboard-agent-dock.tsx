@@ -38,7 +38,7 @@ export function DashboardAgentDock() {
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-300">
               <Sparkles className="size-3.5 text-amber-400" />
-              <span>Zara · Nemotron 3 Super 120B</span>
+              <span>Zara · Assistente Financeira</span>
             </div>
             <button
               onClick={() => setResponse(null)}
@@ -61,8 +61,8 @@ export function DashboardAgentDock() {
       <AgentDock
         agentName="Zara"
         avatarSrc="https://api.dicebear.com/10.x/initial-face/svg?seed=Zaraaaa&size=80"
-        idleStatus="Sua assistente (Nemotron 120B)"
-        workingStatus="Raciocinando com Nemotron 120B..."
+        idleStatus="Sua assistente financeira"
+        workingStatus="Analisando suas finanças..."
         onMessageSubmit={handleMessageSubmit}
         className="w-full"
       />

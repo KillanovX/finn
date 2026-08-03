@@ -37,7 +37,7 @@ export function AgentDock({
   avatarSrc,
   className,
   idleStatus = "Pronta",
-  workingStatus = "Raciocinando com Nemotron...",
+  workingStatus = "Analisando...",
   onMessageSubmit,
 }: AgentDockProps) {
   const [mode, setMode] = useState<AgentDockMode>("idle");
