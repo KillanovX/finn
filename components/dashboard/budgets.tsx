@@ -2,9 +2,10 @@
 
 import { useBalance } from "@/lib/balance-context"
 import { budgets } from "@/lib/finance-data"
+import { AnimatedAmount } from "@/components/ui/animated-amount"
 
 export function Budgets() {
-  const { formatCurrency } = useBalance()
+  const { formatCurrency, isBalanceVisible } = useBalance()
 
   return (
     <div className="rounded-3xl bg-card p-5 text-card-foreground">
@@ -24,7 +25,9 @@ export function Budgets() {
               <div className="mb-1.5 flex items-center justify-between text-sm">
                 <span className="font-medium">{b.name}</span>
                 <span className={over ? "text-destructive" : "text-muted-foreground"}>
-                  {formatCurrency(b.spent)} / {formatCurrency(b.limit)}
+                  <AnimatedAmount value={formatCurrency(b.spent)} isVisible={isBalanceVisible} />
+                  <span> / </span>
+                  <AnimatedAmount value={formatCurrency(b.limit)} isVisible={isBalanceVisible} />
                 </span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
@@ -35,7 +38,8 @@ export function Budgets() {
               </div>
               {over && (
                 <p className="mt-1 text-xs text-destructive">
-                  Limite excedido em {formatCurrency(b.spent - b.limit)}
+                  Limite excedido em{" "}
+                  <AnimatedAmount value={formatCurrency(b.spent - b.limit)} isVisible={isBalanceVisible} />
                 </p>
               )}
             </li>

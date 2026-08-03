@@ -29,9 +29,6 @@ export function BalanceProvider({ children }: { children: React.ReactNode }) {
   }
 
   const formatCurrency = (value: number, detailed = false) => {
-    if (!isBalanceVisible) {
-      return "••••••••"
-    }
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",

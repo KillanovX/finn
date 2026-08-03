@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { useBalance } from "@/lib/balance-context"
 import { transactions } from "@/lib/finance-data"
+import { AnimatedAmount } from "@/components/ui/animated-amount"
 
 const iconByCategory: Record<string, LucideIcon> = {
   Alimentação: Utensils,
@@ -33,7 +34,7 @@ export function Transactions() {
           <h2 className="text-base font-semibold">Transações recentes</h2>
           <p className="text-sm text-muted-foreground">Suas últimas movimentações</p>
         </div>
-        <button className="text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+        <button className="text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline cursor-pointer">
           Ver tudo
         </button>
       </div>
@@ -42,6 +43,8 @@ export function Transactions() {
         {transactions.map((t) => {
           const Icon = iconByCategory[t.category] ?? ShoppingCart
           const income = t.amount > 0
+          const valStr = (income ? "+" : "") + formatCurrency(t.amount, true)
+
           return (
             <li key={t.id} className="flex items-center gap-3 py-3">
               <div
@@ -58,8 +61,7 @@ export function Transactions() {
                 </p>
               </div>
               <span className={`text-sm font-semibold ${income ? "text-foreground" : "text-muted-foreground"}`}>
-                {isBalanceVisible ? (income ? "+" : "") : ""}
-                {formatCurrency(t.amount, true)}
+                <AnimatedAmount value={valStr} isVisible={isBalanceVisible} />
               </span>
             </li>
           )

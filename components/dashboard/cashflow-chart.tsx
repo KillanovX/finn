@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/chart"
 import { useBalance } from "@/lib/balance-context"
 import { cashflow } from "@/lib/finance-data"
+import { AnimatedAmount } from "@/components/ui/animated-amount"
 
 const chartConfig = {
   entradas: { label: "Entradas", color: "var(--chart-1)" },
@@ -16,7 +17,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function CashflowChart() {
-  const { formatCurrency } = useBalance()
+  const { formatCurrency, isBalanceVisible } = useBalance()
 
   return (
     <div className="rounded-3xl bg-card p-5 text-card-foreground">
@@ -46,7 +47,7 @@ export function CashflowChart() {
               <ChartTooltipContent
                 formatter={(value) => (
                   <span className="font-mono font-medium text-foreground tabular-nums">
-                    {formatCurrency(Number(value))}
+                    <AnimatedAmount value={formatCurrency(Number(value))} isVisible={isBalanceVisible} />
                   </span>
                 )}
               />
