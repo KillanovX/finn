@@ -20,6 +20,7 @@ function MechanicalChar({
   index: number
 }) {
   const isNumber = /[0-9.,]/.test(vChar)
+  const isSeparator = /[.,]/.test(vChar)
   const targetChar = isVisible ? vChar : hChar
 
   const [currentChar, setCurrentChar] = useState(targetChar)
@@ -51,7 +52,8 @@ function MechanicalChar({
     const prev = activeCharRef.current
     activeCharRef.current = targetChar
 
-    const delay = index * 32
+    // Faster stagger delay (20ms per character index)
+    const delay = index * 20
 
     const timer = setTimeout(() => {
       setPrevChar(prev)
@@ -62,7 +64,7 @@ function MechanicalChar({
       const endTimer = setTimeout(() => {
         setIsFlipping(false)
         setPrevChar(null)
-      }, 220)
+      }, 150)
 
       return () => clearTimeout(endTimer)
     }, delay)
@@ -90,19 +92,21 @@ function MechanicalChar({
     )
   }
 
+  const widthClass = isSeparator ? "min-w-[0.22em]" : "min-w-[0.55em]"
+
   return (
     <span
       key={animKey}
-      className="relative inline-flex items-center justify-center overflow-hidden h-[1.1em] min-w-[0.58em] align-middle select-none"
+      className={`relative inline-flex items-center justify-center overflow-hidden h-[1.1em] ${widthClass} align-middle select-none`}
       style={{ perspective: "300px" }}
     >
       {isFlipping && prevChar && prevChar !== currentChar ? (
         <>
-          {/* Outgoing card: rotates down out from center to bottom */}
+          {/* Outgoing card */}
           <span
             className="absolute inset-0 flex items-center justify-center leading-none"
             style={{
-              animation: "mechRotateOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+              animation: "mechRotateOut 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
               transformOrigin: "50% 50%",
               backfaceVisibility: "hidden",
             }}
@@ -110,11 +114,11 @@ function MechanicalChar({
             {renderCharContent(prevChar)}
           </span>
 
-          {/* Incoming card: rotates down in from top to center */}
+          {/* Incoming card */}
           <span
             className="absolute inset-0 flex items-center justify-center leading-none"
             style={{
-              animation: "mechRotateIn 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
+              animation: "mechRotateIn 140ms cubic-bezier(0.4, 0, 0.2, 1) forwards",
               transformOrigin: "50% 50%",
               backfaceVisibility: "hidden",
             }}
