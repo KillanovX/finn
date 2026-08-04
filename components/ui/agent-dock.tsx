@@ -29,7 +29,7 @@ type AgentDockProps = {
 };
 
 const dockTransition = {
-  duration: 0.3,
+  duration: 0.5,
   ease: [0.22, 1, 0.36, 1],
 } as const;
 
@@ -209,7 +209,7 @@ export function AgentDock({
       transition={
         shouldReduceMotion
           ? { duration: 0 }
-          : { type: "spring", stiffness: 350, damping: 28 }
+          : { type: "spring", stiffness: 160, damping: 24 }
       }
       className={`relative overflow-hidden border-2 border-black bg-neutral-950 text-white shadow-2xl ml-auto ${
         !isExpanded ? "cursor-pointer hover:scale-105 transition-transform" : ""
