@@ -3,10 +3,12 @@
 import { useState } from "react"
 import { AgentDock } from "@/components/ui/agent-dock"
 import { Sparkles, X } from "lucide-react"
+import { useFinanceStore } from "@/store/useFinanceStore"
 
 export function DashboardAgentDock() {
   const [response, setResponse] = useState<string | null>(null)
   const [lastMessage, setLastMessage] = useState<string | null>(null)
+  const { accounts, addTransaction } = useFinanceStore()
 
   const handleMessageSubmit = async (message: string) => {
     setLastMessage(message)
@@ -22,6 +24,28 @@ export function DashboardAgentDock() {
       const data = await res.json()
       if (data.reply) {
         setResponse(data.reply)
+
+        if (data.action?.type === "ADD_TRANSACTION" && data.action.transaction) {
+          const tx = data.action.transaction
+          let accId = accounts[0]?.id || "acc-1"
+          if (tx.accountSearch) {
+            const foundAcc = accounts.find(
+              (a) =>
+                a.name.toLowerCase().includes(tx.accountSearch.toLowerCase()) ||
+                (a.bank && a.bank.toLowerCase().includes(tx.accountSearch.toLowerCase()))
+            )
+            if (foundAcc) accId = foundAcc.id
+          }
+
+          addTransaction({
+            description: tx.description,
+            amount: tx.amount,
+            type: tx.type || "EXPENSE",
+            category: tx.category || "Outros",
+            date: tx.date || new Date().toISOString().split("T")[0],
+            accountId: accId,
+          })
+        }
       } else if (data.error) {
         setResponse(`Ops! ${data.error}`)
       }

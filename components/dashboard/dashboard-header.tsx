@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Eye, EyeOff, Hand, PiggyBank, Plus, Search } from "lucide-react"
+import { Bell, Eye, EyeOff, PiggyBank, Plus, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useBalance } from "@/lib/balance-context"
 
@@ -15,9 +15,7 @@ export function DashboardHeader() {
         </div>
         <div>
           <h1 className="text-xl font-semibold leading-tight tracking-tight">Cofre</h1>
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            Olá, Marina <Hand className="size-4 text-amber-500 inline" />
-          </p>
+          <p className="text-sm text-muted-foreground">Olá, Marina</p>
         </div>
       </div>
 

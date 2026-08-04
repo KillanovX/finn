@@ -48,6 +48,10 @@ export function AgentDock({
   const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const messageRef = useRef(message);
+  messageRef.current = message;
+
   const shouldReduceMotion = useReducedMotion();
 
   // Speech-to-Text Integration (Web Speech API)
@@ -58,7 +62,7 @@ export function AgentDock({
         (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const rec = new SpeechRecognition();
-        rec.continuous = false;
+        rec.continuous = true;
         rec.interimResults = true;
         rec.lang = "pt-BR";
 
@@ -74,25 +78,43 @@ export function AgentDock({
             transcript += event.results[i][0].transcript;
           }
           setMessage(transcript);
+
+          // Reset 3s silence timer on each speech result
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+          if (transcript.trim()) {
+            silenceTimerRef.current = setTimeout(() => {
+              try {
+                recognitionRef.current?.stop();
+              } catch (e) {}
+              setIsListening(false);
+              void submitMessage();
+            }, 3000);
+          }
         };
 
         rec.onerror = (event: any) => {
           console.warn("Speech recognition error:", event.error);
           setIsListening(false);
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         };
 
         rec.onend = () => {
           setIsListening(false);
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         };
 
         recognitionRef.current = rec;
       }
     }
+    return () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    };
   }, []);
 
   function toggleVoice() {
     if (!isExpanded) setIsExpanded(true);
     if (isListening) {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       recognitionRef.current?.stop();
       setIsListening(false);
     } else {
@@ -115,16 +137,21 @@ export function AgentDock({
   }
 
   async function submitMessage() {
-    const nextMessage = message.trim();
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    const currentMsg = messageRef.current || message;
+    const nextMessage = currentMsg.trim();
     if (!nextMessage) {
       openComposer();
       return;
     }
     if (isListening) {
-      recognitionRef.current?.stop();
+      try {
+        recognitionRef.current?.stop();
+      } catch (e) {}
       setIsListening(false);
     }
     setMessage("");
+    messageRef.current = "";
     setMode("working");
     await onMessageSubmit?.(nextMessage);
   }
@@ -172,140 +199,136 @@ export function AgentDock({
   }, [isListening, isExpanded]);
 
   return (
-    <AnimatePresence mode="wait">
-      {!isExpanded ? (
-        <motion.button
-          key="zara-dock-collapsed"
-          type="button"
-          onClick={() => setIsExpanded(true)}
-          initial={shouldReduceMotion ? false : { scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={shouldReduceMotion ? false : { scale: 0.8, opacity: 0 }}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.94 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className="group relative flex size-14 items-center justify-center rounded-full bg-neutral-950 p-1 border-2 border-black shadow-2xl cursor-pointer ml-auto"
-          aria-label={`Abrir ${agentName}`}
-          title={`Abrir ${agentName}`}
-        >
-          <img
-            alt={agentName}
-            className="size-full rounded-full object-cover"
-            src={avatarSrc}
-          />
-          <span className="absolute -top-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-black">
-            <span className="size-1.5 rounded-full bg-white animate-pulse" />
-          </span>
-        </motion.button>
-      ) : (
-        <motion.form
-          key="zara-dock-expanded"
-          className={className}
-          onSubmit={handleSubmit}
-          initial={
-            shouldReduceMotion
-              ? false
-              : { opacity: 0, scaleX: 0.15, transformOrigin: "right center" }
-          }
-          animate={{ opacity: 1, scaleX: 1, transformOrigin: "right center" }}
-          exit={
-            shouldReduceMotion
-              ? false
-              : { opacity: 0, scaleX: 0.15, transformOrigin: "right center" }
-          }
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : { type: "spring", stiffness: 380, damping: 30 }
-          }
-        >
-          <div className="flex w-full flex-col-reverse overflow-hidden rounded-2xl bg-neutral-950 p-2 text-white shadow-2xl border-2 border-black">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
+    <motion.div
+      layout
+      initial={false}
+      animate={{
+        width: isExpanded ? "100%" : "52px",
+        borderRadius: isExpanded ? "1rem" : "9999px",
+      }}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0 }
+          : { type: "spring", stiffness: 350, damping: 28 }
+      }
+      className={`relative overflow-hidden border-2 border-black bg-neutral-950 text-white shadow-2xl ml-auto ${
+        !isExpanded ? "cursor-pointer hover:scale-105 transition-transform" : ""
+      }`}
+      onClick={() => {
+        if (!isExpanded) setIsExpanded(true);
+      }}
+    >
+      <form onSubmit={handleSubmit} className="w-full">
+        <div className="flex w-full flex-col-reverse p-1.5">
+          <div className="flex h-10 items-center justify-between gap-2.5">
+            {/* Always-mounted avatar circle */}
+            <div
+              className="relative shrink-0 flex items-center justify-center cursor-pointer"
+              onClick={(e) => {
+                if (isExpanded) {
+                  e.stopPropagation();
                   if (isListening) recognitionRef.current?.stop();
                   setIsExpanded(false);
-                }}
-                className="relative shrink-0 cursor-pointer group"
-                title="Recolher Zara"
-              >
-                <img
-                  alt={agentName}
-                  className="size-9 rounded-xl object-cover transition-transform group-hover:scale-95"
-                  height={36}
-                  src={avatarSrc}
-                  width={36}
-                />
-              </button>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium leading-none">
-                  {agentName}
-                </p>
-                <AnimatePresence initial={false} mode="popLayout">
-                  <motion.p
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-1 truncate text-xs text-neutral-400"
-                    exit={{ opacity: 0, y: -6 }}
-                    initial={{ opacity: 0, y: 6 }}
-                    key={mode + (isListening ? "-listening" : "")}
-                    transition={{ duration: 0.16, ease: "easeOut" }}
-                  >
-                    {isListening ? (
-                      <span className="inline-flex items-center gap-1.5 text-red-400">
-                        <MicrophoneIcon weight="fill" className="size-3.5 animate-pulse" />
-                        Transcrevendo sua voz...
-                      </span>
-                    ) : mode === "working" ? (
-                      workingStatus
-                    ) : (
-                      idleStatus
-                    )}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-              <div className="flex shrink-0 items-center gap-1.5">
-                <DockButton
-                  icon={
-                    <MicrophoneIcon
-                      weight="bold"
-                      className={isListening ? "animate-pulse text-red-400" : ""}
-                    />
-                  }
-                  label={isListening ? "Ouvindo" : "Voz"}
-                  shortcut="V"
-                  onClick={toggleVoice}
-                  isActive={isListening}
-                />
-                <DockButton
-                  icon={
-                    mode === "composing" ? (
-                      <PaperPlaneTiltIcon weight="fill" />
-                    ) : (
-                      <ChatIcon weight="bold" />
-                    )
-                  }
-                  label={mode === "composing" ? "Enviar" : "Chat"}
-                  shortcut="C"
-                  type="submit"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isListening) recognitionRef.current?.stop();
-                    setIsExpanded(false);
-                  }}
-                  className="flex size-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer ml-0.5"
-                  aria-label="Recolher Zara"
-                  title="Recolher Zara"
-                >
-                  <XIcon className="size-4" weight="bold" />
-                </button>
-              </div>
+                }
+              }}
+              title={isExpanded ? "Recolher Zara" : `Abrir ${agentName}`}
+            >
+              <img
+                alt={agentName}
+                className="size-9 rounded-full object-cover shrink-0"
+                src={avatarSrc}
+              />
+              {!isExpanded && (
+                <span className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-black">
+                  <span className="size-1 rounded-full bg-white animate-pulse" />
+                </span>
+              )}
             </div>
+
+            {/* Expanded Header Controls */}
+            {isExpanded && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex flex-1 items-center justify-between min-w-0 gap-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium leading-none">
+                    {agentName}
+                  </p>
+                  <AnimatePresence initial={false} mode="popLayout">
+                    <motion.p
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-1 truncate text-xs text-neutral-400"
+                      exit={{ opacity: 0, y: -6 }}
+                      initial={{ opacity: 0, y: 6 }}
+                      key={mode + (isListening ? "-listening" : "")}
+                      transition={{ duration: 0.16, ease: "easeOut" }}
+                    >
+                      {isListening ? (
+                        <span className="inline-flex items-center gap-1.5 text-red-400 font-semibold">
+                          <MicrophoneIcon weight="fill" className="size-3.5 animate-pulse" />
+                          Ouvindo (envio automático em 3s de silêncio)...
+                        </span>
+                      ) : mode === "working" ? (
+                        workingStatus
+                      ) : (
+                        idleStatus
+                      )}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <DockButton
+                    icon={
+                      <MicrophoneIcon
+                        weight="bold"
+                        className={isListening ? "animate-pulse text-red-400" : ""}
+                      />
+                    }
+                    label={isListening ? "Ouvindo" : "Voz"}
+                    shortcut="V"
+                    onClick={toggleVoice}
+                    isActive={isListening}
+                  />
+                  <DockButton
+                    icon={
+                      mode === "composing" ? (
+                        <PaperPlaneTiltIcon weight="fill" />
+                      ) : (
+                        <ChatIcon weight="bold" />
+                      )
+                    }
+                    label={mode === "composing" ? "Enviar" : "Chat"}
+                    shortcut="C"
+                    type="submit"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isListening) recognitionRef.current?.stop();
+                      setIsExpanded(false);
+                    }}
+                    className="flex size-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                    aria-label="Recolher Zara"
+                    title="Recolher Zara"
+                  >
+                    <XIcon className="size-4" weight="bold" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Composer Textarea */}
+          {isExpanded && (
             <motion.div
               animate={{
-                height: mode === "composing" ? 120 : 0,
+                height: mode === "composing" ? 110 : 0,
                 opacity: mode === "composing" ? 1 : 0,
               }}
               aria-hidden={mode !== "composing"}
@@ -313,7 +336,7 @@ export function AgentDock({
               initial={false}
               transition={shouldReduceMotion ? { duration: 0 } : dockTransition}
             >
-              <div className="relative mb-2">
+              <div className="relative mb-1 mt-1">
                 <button
                   aria-label="Close composer"
                   className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-md text-neutral-400 hover:bg-white/10 hover:text-white cursor-pointer"
@@ -327,23 +350,23 @@ export function AgentDock({
                 </button>
                 <textarea
                   aria-label="Message agent"
-                  className="h-28 w-full resize-none bg-transparent px-2 py-2 pr-9 text-sm leading-6 outline-none placeholder:text-neutral-500"
+                  className="h-24 w-full resize-none bg-transparent px-2 py-2 pr-9 text-sm leading-6 outline-none placeholder:text-neutral-500"
                   onChange={(event) => setMessage(event.target.value)}
                   onKeyDown={handleTextareaKeyDown}
                   placeholder={
                     isListening
-                      ? "Fale agora... transcrevendo em tempo real..."
-                      : "Digite sua dúvida ou comando aqui..."
+                      ? "Fale agora... envio automático após 3s de silêncio..."
+                      : "Digite sua dúvida ou comando (ex: 'mercado 800 nubank')..."
                   }
                   ref={textareaRef}
                   value={message}
                 />
               </div>
             </motion.div>
-          </div>
-        </motion.form>
-      )}
-    </AnimatePresence>
+          )}
+        </div>
+      </form>
+    </motion.div>
   );
 }
 

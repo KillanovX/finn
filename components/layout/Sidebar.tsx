@@ -15,11 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  Eye,
-  EyeOff,
 } from "lucide-react"
-import { useBalance } from "@/lib/balance-context"
-import { useFinanceStore } from "@/store/useFinanceStore"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -35,10 +31,6 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const { isBalanceVisible, toggleBalance, formatCurrency } = useBalance()
-  const getTotalBalance = useFinanceStore((state) => state.getTotalBalance)
-
-  const balance = getTotalBalance()
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebar_collapsed")
@@ -84,24 +76,6 @@ export function Sidebar() {
           {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
         </button>
       </div>
-
-      {/* Balance Summary Card */}
-      {!isCollapsed && (
-        <div className="m-3 p-3.5 rounded-2xl bg-secondary/60 border border-border/50 flex flex-col gap-1">
-          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
-            <span>Saldo total</span>
-            <button
-              onClick={toggleBalance}
-              className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              {isBalanceVisible ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
-            </button>
-          </div>
-          <p className="text-base font-semibold tracking-tight text-foreground truncate">
-            {isBalanceVisible ? formatCurrency(balance) : "R$ ******"}
-          </p>
-        </div>
-      )}
 
       {/* Navigation List */}
       <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
