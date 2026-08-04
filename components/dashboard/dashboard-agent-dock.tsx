@@ -31,10 +31,10 @@ export function DashboardAgentDock() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 w-full max-w-[calc(100vw-3rem)] sm:max-w-md">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 w-full max-w-[calc(100vw-3rem)] sm:max-w-md pointer-events-none">
       {/* Response Card Popup */}
       {response && (
-        <div className="relative w-full overflow-hidden rounded-2xl bg-neutral-950/95 border border-neutral-800 p-4 text-white shadow-2xl backdrop-blur-md transition-all animate-in fade-in slide-in-from-bottom-2">
+        <div className="relative w-full overflow-hidden rounded-2xl bg-neutral-950/95 border border-neutral-800 p-4 text-white shadow-2xl backdrop-blur-md transition-all animate-in fade-in slide-in-from-bottom-2 pointer-events-auto">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-300">
               <Sparkles className="size-3.5 text-amber-400" />
@@ -58,14 +58,16 @@ export function DashboardAgentDock() {
       )}
 
       {/* Dock */}
-      <AgentDock
-        agentName="Zara"
-        avatarSrc="https://api.dicebear.com/10.x/initial-face/svg?seed=Zaraaaa&size=80"
-        idleStatus="Sua assistente financeira"
-        workingStatus="Analisando suas finanças..."
-        onMessageSubmit={handleMessageSubmit}
-        className="w-full"
-      />
+      <div className="w-full flex justify-end pointer-events-auto">
+        <AgentDock
+          agentName="Zara"
+          avatarSrc="https://api.dicebear.com/10.x/initial-face/svg?seed=Zaraaaa&size=80"
+          idleStatus="Sua assistente financeira"
+          workingStatus="Analisando suas finanças..."
+          onMessageSubmit={handleMessageSubmit}
+          className="w-full"
+        />
+      </div>
     </div>
   )
 }
