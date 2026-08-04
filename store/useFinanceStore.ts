@@ -119,9 +119,9 @@ const initialBudgets: Budget[] = [
 ]
 
 const initialGoals: Goal[] = [
-  { id: "g-1", name: "Reserva de Emergência", targetAmount: 46000, savedAmount: 28000, category: "EMERGENCY", color: "#10b981", icon: "🛡️" },
-  { id: "g-2", name: "Viagem para Europa", targetAmount: 15000, savedAmount: 6500, deadline: "2026-12-15", category: "TRAVEL", color: "#8b5cf6", icon: "✈️" },
-  { id: "g-3", name: "Entrada do Carro", targetAmount: 25000, savedAmount: 12000, deadline: "2027-04-10", category: "VEHICLE", color: "#f59e0b", icon: "🚗" },
+  { id: "g-1", name: "Reserva de Emergência", targetAmount: 46000, savedAmount: 28000, category: "EMERGENCY", color: "#10b981", icon: "Shield" },
+  { id: "g-2", name: "Viagem para Europa", targetAmount: 15000, savedAmount: 6500, deadline: "2026-12-15", category: "TRAVEL", color: "#8b5cf6", icon: "Plane" },
+  { id: "g-3", name: "Entrada do Carro", targetAmount: 25000, savedAmount: 12000, deadline: "2027-04-10", category: "VEHICLE", color: "#f59e0b", icon: "Car" },
 ]
 
 const initialRecurrences: Recurrence[] = [

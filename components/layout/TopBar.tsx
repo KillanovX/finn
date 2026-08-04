@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Bell, Check, Sparkles, User, Search } from "lucide-react"
+import { Bell, Check, Hand, Sparkles, User, Search } from "lucide-react"
 
 export function TopBar() {
   const [hasUnread, setHasUnread] = useState(true)
@@ -22,8 +22,8 @@ export function TopBar() {
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-md sm:px-6">
       {/* Date & Greeting */}
       <div className="flex flex-col">
-        <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
-          Olá, Marina 👋
+        <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg flex items-center gap-1.5">
+          Olá, Marina <Hand className="size-4 text-amber-500 inline" />
         </h1>
         <p className="text-xs text-muted-foreground capitalize">{currentDate}</p>
       </div>

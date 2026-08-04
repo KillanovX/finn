@@ -186,11 +186,16 @@ export function AgentDock({
                 key={mode + (isListening ? "-listening" : "")}
                 transition={{ duration: 0.16, ease: "easeOut" }}
               >
-                {isListening
-                  ? "🎙️ Transcrevendo sua voz..."
-                  : mode === "working"
-                  ? workingStatus
-                  : idleStatus}
+                {isListening ? (
+                  <span className="inline-flex items-center gap-1.5 text-red-400">
+                    <MicrophoneIcon weight="fill" className="size-3.5 animate-pulse" />
+                    Transcrevendo sua voz...
+                  </span>
+                ) : mode === "working" ? (
+                  workingStatus
+                ) : (
+                  idleStatus
+                )}
               </motion.p>
             </AnimatePresence>
           </div>

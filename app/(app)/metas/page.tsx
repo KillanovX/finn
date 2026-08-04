@@ -1,10 +1,32 @@
 "use client"
 
 import React, { useState } from "react"
-import { Plus, Target, Trophy, ShieldAlert, DollarSign } from "lucide-react"
+import { Plus, Target, Trophy, ShieldAlert, DollarSign, Shield, Plane, Car, GraduationCap, Landmark } from "lucide-react"
 import { useFinanceStore } from "@/store/useFinanceStore"
 import { useBalance } from "@/lib/balance-context"
 import { AnimatedAmount } from "@/components/ui/animated-amount"
+
+const renderGoalIcon = (icon?: string, category?: string) => {
+  switch (icon || category) {
+    case "Shield":
+    case "EMERGENCY":
+      return <Shield className="size-5 text-emerald-500" />
+    case "Plane":
+    case "TRAVEL":
+      return <Plane className="size-5 text-purple-500" />
+    case "Car":
+    case "VEHICLE":
+      return <Car className="size-5 text-amber-500" />
+    case "Education":
+    case "EDUCATION":
+      return <GraduationCap className="size-5 text-blue-500" />
+    case "Investment":
+    case "INVESTMENT":
+      return <Landmark className="size-5 text-indigo-500" />
+    default:
+      return <Target className="size-5 text-primary" />
+  }
+}
 
 export default function GoalsPage() {
   const { goals, accounts, addGoal, depositToGoal } = useFinanceStore()
@@ -31,7 +53,7 @@ export default function GoalsPage() {
       targetAmount: targetVal,
       category: "OTHER",
       color: "#8b5cf6",
-      icon: "🎯",
+      icon: "Target",
     })
 
     setGoalName("")
@@ -77,7 +99,9 @@ export default function GoalsPage() {
             <div key={g.id} className="rounded-3xl bg-card border border-border p-5 flex flex-col justify-between space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-2xl">{g.icon || "🎯"}</span>
+                  <div className="flex size-10 items-center justify-center rounded-2xl bg-secondary text-foreground shrink-0">
+                    {renderGoalIcon(g.icon, g.category)}
+                  </div>
                   <div>
                     <h3 className="font-bold text-foreground text-base leading-tight">{g.name}</h3>
                     {g.deadline && <p className="text-xs text-muted-foreground">Prazo: {g.deadline}</p>}
